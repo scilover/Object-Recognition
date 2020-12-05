@@ -8,7 +8,7 @@ from sklearn.preprocessing import OneHotEncoder
 
 class GetDataIndex:
 
-    def __init__(self, label_folder, data_type, img_size=(320, 320), grid_size=(16,16)):
+    def __init__(self, label_folder, data_type, img_size, grid_size):
 
         self.label_folder = label_folder
         self.data_type = data_type
@@ -64,23 +64,17 @@ class GetDataIndex:
         data = []
         for img_name, img_id in imgs.items():
 
-            data.append((img_name, np.array(labels_[img_id][1:])))
+            data.append((img_name, labels_[img_id][1:]))
 
         return data
-
-def generator(data, batch_size):
-    for i in range(0, len(data), batch_size):
-        if i + batch_size <= len(data):
-            yield data[i: i+batch_size]
-        else:
-            yield data[i:]
 
 
 class GetImage:
 
-    def __init__(self, img_size=(320,320)):
+    def __init__(self, all_image_paths, img_size):
 
         self.img_size = img_size
+        self.all_image_paths = all_image_paths
 
     def pad(self, image):
         h, w = image.shape[:2] # deal with channel-last occasion
@@ -94,7 +88,6 @@ class GetImage:
 
     def preprocess_image(self, image):
         image = tf.image.decode_jpeg(image, channels=3)
-        # resize_ratio = self.img_size[0] / max(image.shape[:-1])
         image = self.pad(image)
         image = tf.image.resize(image, self.img_size)
         image = tf.cast(image, tf.uint8) # Note: [0,255] is uint8, not int8 !!!
@@ -107,75 +100,109 @@ class GetImage:
         image = tf.io.read_file(path)
         return self.preprocess_image(image)
 
-    # def __call__(self, *args, **kwargs):
-    #
-    #     path_ds = tf.data.Dataset.from_tensor_slices(self.all_image_paths)
-    #     image_ds = path_ds.map(self.load_and_preprocess_image)
-    #
-    #     return image_ds
+    def __call__(self, *args, **kwargs):
 
-# class GetData:
-#     """
-#     get (image, label) pairs for training and test.
-#
-#     """
-#     def __init__(self, image_folder, label_folder, data_type, grid_size=(32,32), batch_size=8):
-#
-#         self.image_folder = image_folder
-#         self.label_folder = label_folder
-#         self.data_type = data_type
-#         self.batch_size = batch_size
-#         self.grid_size = grid_size
-#
-#     def _devideLabels(self, labels, devide_index=3):
-#         """
-#
-#         :param labels: input labels to be devided.
-#         :param devide_index: devide labels in the last dimension
-#         :return: devided labels
-#         """
-#
-#         labels = np.array(labels)
-#
-#         return labels[...,0], labels[...,1:devide_index], labels[...,devide_index:]
-#
-#
-#     def __call__(self, tensor_generator=True):
-#
-#         # labels = GetLabel(self.label_folder, self.data_type, grid_size=self.grid_size)()
-#         # loader = GetImage(self.image_folder)
-#         labels = GetLabel(self.label_folder, self.data_type)._getDic()
-#         images, targets = [], []
-#         for key, label in labels.items():
-#             img_path = os.path.join(self.image_folder, key)
-#             images.append([img_path])
-#             # images.append(loader.load_and_preprocess_image(img_path))
-#             targets.append(label)
-#
-#         if tensor_generator:
-#             data = tf.data.Dataset.from_tensor_slices((images,targets)).batch(self.batch_size)
-#             # labels = tf.data.Dataset.from_tensor_slices(labels).batch(self.batch_size)
-#
-#         else:
-#             images = tf.convert_to_tensor(images)
-#             labels = tf.convert_to_tensor(labels)
-#             data = (images, labels)
-#
-#         # x_train, x_test, y_train, y_test = \
-#         #     train_test_split(images, targets, test_size = test_size, random_state = random_state)
-#
-#         return data
+        image_ds = [self.load_and_preprocess_image(path) for path in self.all_image_paths]
+
+        return tf.convert_to_tensor(image_ds)
+
+
+class GetLabel:
+
+    def __init__(self, label, encoder, output_size):
+
+        self.label = label
+        self.encoder = encoder
+        self.output_size = output_size
+
+    def convert_label_to_tensor(self, old_label):
+
+        new_label = np.zeros((self.output_size))
+        for label in old_label:
+            c, nx, ny, x, y, h, w = label
+            new_label[ny, nx] = [1.] + self.encoder.transform([[c]]).toarray()[0].tolist() + [x, y, h, w]
+
+        return new_label
+
+    def __call__(self, *args, **kwargs):
+
+        new_labels = []
+
+        for label in self.label:
+            new_labels.append(self.convert_label_to_tensor(label))
+
+        return tf.convert_to_tensor(new_labels)
+
+
+
+
+
+
+class GetData:
+    """
+    get (image, label) pairs for training and test.
+
+    """
+    def __init__(self, image_folder, label_folder, data_type, img_size, grid_size, batch_size, encoder):
+
+        self.data = GetDataIndex(label_folder, data_type, img_size, grid_size)()
+        self.batch_size = batch_size
+        self.image_folder = image_folder
+        self.data_generator = iter(self.generator())
+        self.encoder = encoder
+        d = int(img_size[0] / grid_size[0])
+        self.output_size = (d, d, 85)
+        self.img_size = img_size
+
+
+    def generator(self):
+        sample_number = len(self.data)
+        for i in range(0, sample_number, self.batch_size):
+            if i + self.batch_size <= sample_number:
+                data = self.data[i: i + self.batch_size]
+            else:
+                data =  self.data[i:]
+            img_names = [i[0] for i in data]
+            labels = [i[1] for i in data]
+
+            batch_image_paths = [os.path.join(self.image_folder, img_name) for img_name in img_names]
+            images = GetImage(batch_image_paths, self.img_size)()
+            labels = GetLabel(labels, self.encoder, self.output_size)()
+
+            yield images, labels
+
+    def __call__(self):
+
+        return self.data_generator
+
+
+        # data = tf.data.Dataset.from_tensor_slices((images,targets)).batch(self.batch_size)
+            # labels = tf.data.Dataset.from_tensor_slices(labels).batch(self.batch_size)
+        #
+        # else:
+        #     images = tf.convert_to_tensor(images)
+        #     labels = tf.convert_to_tensor(labels)
+        #     data = (images, labels)
+
+        # x_train, x_test, y_train, y_test = \
+        #     train_test_split(images, targets, test_size = test_size, random_state = random_state)
+
 
 
 if __name__ == '__main__':
 
     label_folder = r'G:\Data\coco2017\annotations_trainval2017'
-    # labels = GetLabel(xml_folder)()
-    # print(labels['010000.jpg'].shape)
     image_folder = r'G:\Data\coco2017\val2017'
-    #image_ds = GetImage(image_folder)()
-    data = GetDataIndex(label_folder, 'val2017', img_size=(320, 320), grid_size=(16,16))()
-    # labels = GetLabel(label_folder, 'val2017')()
-    # with open('val_labels.json', 'w') as obj:
-    #     json.dump(labels, obj)
+
+    encoder = OneHotEncoder(categories='auto')
+    annFile = '{}/annotations/instances_{}.json'.format(label_folder, 'val2017')
+    coco = COCO(annFile)
+    cats = coco.loadCats(coco.getCatIds())
+    cats = [[cat['id']] for cat in cats]
+    encoder.fit(cats)
+
+    data = GetData(image_folder, label_folder, 'val2017', (640, 640), (32, 32), 8, encoder)()
+    k = next(data)
+
+
     print()
