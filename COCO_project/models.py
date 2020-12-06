@@ -7,17 +7,17 @@ import tensorflow as tf
 
 class Yolo:
 
-    def __init__(self, input_shape, grid_size=(30, 32)):
+    def __init__(self, input_shape, grid_size):
         self.grid_size = grid_size
         self.input_shape = input_shape
 
-    def pad(self):
-
-        dh, dw = self.grid_size
-        pad_width = int((224 - dw) / 2)
-        pad_height = int((224 - dh) / 2)
-
-        return ZeroPadding2D((pad_height, pad_width))
+    # def pad(self):
+    #
+    #     dh, dw = self.grid_size
+    #     pad_width = int((224 - dw) / 2)
+    #     pad_height = int((224 - dh) / 2)
+    #
+    #     return ZeroPadding2D((pad_height, pad_width))
 
 
     def model(self):
@@ -50,7 +50,7 @@ class Yolo:
         # spp5 = tf.image.resize(spp5, x.shape[1:3])
         x = Concatenate(axis=-1)([x, spp1, spp2, spp3, spp4])
         exist = Dense(1, activation='sigmoid', name='exist')(x)
-        category = Dense(2, activation='softmax', name='category')(x)
+        category = Dense(80, activation='softmax', name='category')(x)
         location = Dense(2, activation='sigmoid', name='location')(x)
         shape = Dense(2, activation='relu', name='shape')(x)
         # shape = Dense(2, name='shape')(x)
@@ -62,7 +62,7 @@ class Yolo:
 
 if __name__ == '__main__':
 
-    model = Yolo((640, 640), grid_size=(32,32)).model()
+    model = Yolo((320, 320), grid_size=(16,16)).model()
     # img_tensor = tools.img_to_tensor(r'G:\Data\yoloV4自己的数据集\JPEGImages\010000.jpg')
     # img_tensor = img_tensor[tf.newaxis, ...]
 

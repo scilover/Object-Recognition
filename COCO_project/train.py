@@ -4,9 +4,12 @@ from models import Yolo
 from collections import defaultdict
 import tensorflow as tf
 from preprocess import GetData, GetImage
-import numpy as np
-from tensorflow.keras import backend as K
-from tensorflow.keras.layers import Lambda
+from sklearn.preprocessing import OneHotEncoder
+from pycocotools.coco import COCO
+
+# import numpy as np
+# from tensorflow.keras import backend as K
+# from tensorflow.keras.layers import Lambda
 import json, losses
 
 
@@ -19,8 +22,7 @@ def augment(image,label):
 class Train(object):
 
     def __init__(self, model, epochs, train_data, test_data, beta, alpha, lr,
-                 optimizer,
-                 loss):
+                 optimizer, loss, exist_thresh=0.9, iou_thresh=0.6, grid_size=(32, 32)):
         self.train_data = train_data
         self.test_data = test_data
         self.model = model
@@ -30,6 +32,10 @@ class Train(object):
         self.beta = beta
         self.alpha = alpha
         self.lr = lr
+        self.exist_thresh = exist_thresh
+        self.iou_thresh = iou_thresh
+        self.grid_size = grid_size
+
         self.history = defaultdict(list)
         self.best_loss = 10.
         self.best_l1 = 10.
@@ -52,7 +58,8 @@ class Train(object):
     def train_step(self, images, labels):
         with tf.GradientTape() as tape:
             predictions = self.model(images)
-            loss, l1, l2, l3, iouLoss = self.loss(labels, predictions, self.beta, self.alpha)
+            loss, l1, l2, l3, iouLoss = self.loss(labels, predictions, self.exist_thresh, self.iou_thresh,
+                                                   self.grid_size, self.beta, self.alpha)
 
             gradients = tape.gradient(loss, self.model.trainable_variables)
             self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
@@ -62,8 +69,9 @@ class Train(object):
 
     # @tf.function
     def test_step(self, images, labels):
-        prediction = self.model(images)
-        loss, l1, l2, l3, iouLoss = self.loss(labels, prediction, self.beta, self.alpha)
+        predictions = self.model(images)
+        loss, l1, l2, l3, iouLoss = self.loss(labels, predictions, self.exist_thresh, self.iou_thresh,
+                                                   self.grid_size, self.beta, self.alpha)
 
         self.test_loss(loss)
         self.l1(l1)
@@ -86,9 +94,6 @@ class Train(object):
             self.l3.reset_states()
             self.iouLoss.reset_states()
             for images, labels in self.train_data:
-                loader = GetImage()
-                images = [loader.load_and_preprocess_image(image) for image in images]
-                images = tf.convert_to_tensor(images)
                 self.train_step(images, labels)
 
             for images, labels in self.test_data:
@@ -148,25 +153,34 @@ if __name__ == '__main__':
     label_folder = r'G:\Data\coco2017\annotations_trainval2017'
     train_image_folder = r'G:\Data\coco2017\train2017'
     val_image_folder = r'G:\Data\coco2017\val2017'
-    train_data = GetData(train_image_folder, label_folder, 'train2017', batch_size=8, grid_size=(32,32))(True)
-    val_data = GetData(val_image_folder, label_folder, 'val2017', batch_size=8, grid_size=(32,32))(True)
-    train_data = (train_data
-                .shuffle(1000)
-                .map(augment, num_parallel_calls=AUTOTUNE)
-                # .batch(batch_size=32)
-                # .prefetch(AUTOTUNE)
-                  )
+    img_size = (320, 320)
+    grid_size = (16, 16)
+    batch_size = 8
 
-    # var = model.trainable_variables
-    # betaRange = [i*0.1 for i in range(5,11)]
-    # lrRange = [1e-3, 1e-4, 1e-5, 1e-6]
-    betaRange = [0.0067]
+    encoder = OneHotEncoder(categories='auto')
+    annFile = '{}/annotations/instances_{}.json'.format(label_folder, 'val2017')
+    coco = COCO(annFile)
+    cats = coco.loadCats(coco.getCatIds())
+    cats = [[cat['id']] for cat in cats]
+    encoder.fit(cats)
+
+    train_data = GetData(train_image_folder, label_folder, 'train2017', img_size, grid_size, batch_size, encoder)()
+    val_data = GetData(val_image_folder, label_folder, 'val2017', img_size, grid_size, batch_size, encoder)()
+    # train_data = (train_data
+    #             .shuffle(1000)
+    #             .map(augment, num_parallel_calls=AUTOTUNE)
+    #             # .batch(batch_size=32)
+    #             # .prefetch(AUTOTUNE)
+    #               )
+
+
+    betaRange = [0.01]
     lrRange = [1e-4]
     alphaRange = [1.0]
     for beta in betaRange:
         for lr in lrRange:
             for alpha in alphaRange:
-                model = Yolo((640, 640),grid_size=(32,32)).model()
+                model = Yolo(img_size, grid_size).model()
                 # model.load_weights('model_weights\DenseNet121-1024-Grid32-32\/'
                 #                    'beta-0.0067-alpha-1.0-lr-0.0001-epoch-405-testloss-0.00058-trainloss-0.00034-l1-0.00018-l2-0.00000-l3-0.00039-iouLoss-0.0604.h5')
                 hist = Train(model, 1000, train_data, val_data, beta, alpha, lr,

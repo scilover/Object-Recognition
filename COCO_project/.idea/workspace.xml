@@ -33,8 +33,8 @@
       <recent name="G:\Computer Vision\yolo\git\Object-Recognition\COCO_project" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.preprocess">
-    <configuration name="getData" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python.models">
+    <configuration name="losses" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="COCO_project" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -46,7 +46,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/getData.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/losses.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -76,6 +76,27 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="prediction" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="COCO_project" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/prediction.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="preprocess" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="COCO_project" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -89,27 +110,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/preprocess.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="preprocess1" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="COCO_project" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/preprocess1.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -141,11 +141,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.preprocess" />
-        <item itemvalue="Python.train" />
         <item itemvalue="Python.models" />
-        <item itemvalue="Python.preprocess1" />
-        <item itemvalue="Python.getData" />
+        <item itemvalue="Python.train" />
+        <item itemvalue="Python.losses" />
+        <item itemvalue="Python.prediction" />
+        <item itemvalue="Python.preprocess" />
       </list>
     </recent_temporary>
   </component>
@@ -173,38 +173,38 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="740" y="275" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1607150784929" />
-    <state width="1899" height="190" key="GridCell.Tab.0.bottom" timestamp="1607155874180">
+    <state width="1899" height="281" key="GridCell.Tab.0.bottom" timestamp="1607236624973">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="190" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1607155874180" />
-    <state width="1899" height="190" key="GridCell.Tab.0.center" timestamp="1607155874179">
+    <state width="1899" height="281" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1607236624973" />
+    <state width="1899" height="281" key="GridCell.Tab.0.center" timestamp="1607236624973">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="190" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1607155874179" />
-    <state width="1899" height="190" key="GridCell.Tab.0.left" timestamp="1607155874179">
+    <state width="1899" height="281" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1607236624973" />
+    <state width="1899" height="281" key="GridCell.Tab.0.left" timestamp="1607236624973">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="190" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1607155874179" />
-    <state width="1899" height="190" key="GridCell.Tab.0.right" timestamp="1607155874180">
+    <state width="1899" height="281" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1607236624973" />
+    <state width="1899" height="281" key="GridCell.Tab.0.right" timestamp="1607236624973">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="190" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1607155874180" />
-    <state width="1899" height="190" key="GridCell.Tab.1.bottom" timestamp="1607155874095">
+    <state width="1899" height="281" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1607236624973" />
+    <state width="1899" height="231" key="GridCell.Tab.1.bottom" timestamp="1607236607686">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="190" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1607155874095" />
-    <state width="1899" height="190" key="GridCell.Tab.1.center" timestamp="1607155874095">
+    <state width="1899" height="231" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1607236607686" />
+    <state width="1899" height="231" key="GridCell.Tab.1.center" timestamp="1607236607685">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="190" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1607155874095" />
-    <state width="1899" height="190" key="GridCell.Tab.1.left" timestamp="1607155874095">
+    <state width="1899" height="231" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1607236607685" />
+    <state width="1899" height="231" key="GridCell.Tab.1.left" timestamp="1607236607685">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="190" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1607155874095" />
-    <state width="1899" height="190" key="GridCell.Tab.1.right" timestamp="1607155874095">
+    <state width="1899" height="231" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1607236607685" />
+    <state width="1899" height="231" key="GridCell.Tab.1.right" timestamp="1607236607686">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1899" height="190" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1607155874095" />
+    <state width="1899" height="231" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1607236607686" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -221,8 +221,18 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/preprocess.py</url>
-          <line>211</line>
-          <option name="timeStamp" value="30" />
+          <line>193</line>
+          <option name="timeStamp" value="51" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/train.py</url>
+          <line>96</line>
+          <option name="timeStamp" value="58" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/losses.py</url>
+          <line>63</line>
+          <option name="timeStamp" value="62" />
         </line-breakpoint>
       </breakpoints>
       <default-breakpoints>

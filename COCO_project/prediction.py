@@ -4,10 +4,9 @@ import math
 
 class Predict:
 
-    def __init__(self, exist_thresh=0.9, category_thresh=0.5, iou_thresh=0.6, grid_size=(32,32)):
+    def __init__(self, exist_thresh, iou_thresh, grid_size):
 
         self.exist_thresh = exist_thresh
-        self.category_thresh = category_thresh
         self.iou_thresh = iou_thresh
         self.grid_size = grid_size
         # self.ref_h = 50
@@ -57,10 +56,10 @@ class Predict:
         :param: box1, box2 should be two vectors(5-d) to be compared.
         :return: the intersection over union (IOU) result for the two vectors
         """
-        c_, x_, y_, h_, w_ = box1 # predicted target vector
-        c, x, y, h, w = box2
+        p_, *c_, x_, y_, h_, w_ = box1 # predicted target vector
+        p, *c, x, y, h, w = box2
 
-        if (c - 0.5) * (c_ - 0.5) > 0 and h > 0 and h_ > 0 and w_ > 0 and w > 0:
+        if c == c_ and h > 0 and h_ > 0 and w_ > 0 and w > 0:
             intersection = max(0, (0.5 * (h + h_) - np.abs(y - y_))) * max(0, (0.5 * (w + w_) - np.abs(x - x_)))
             union = h_ * w_ + h * w - intersection
             iou = intersection / union
@@ -70,13 +69,24 @@ class Predict:
 
 
     def getBoxinTraining(self, index1, index2, label):
-
-        c, x, y, h, w = label[2:]
+        """
+        param: label: a tensor in shape (85,), (index1, index2): object location (ny, nx)
+        return: a numpy array in shape (85,)
+        """
+        p, *c, x, y, h, w = label.numpy() # p: confidence, *c: category
+        cmaxIndex = c.index(max(c))  # c: category
+        c = np.zeros(80)
+        c[cmaxIndex] = 1.
         dh, dw = self.grid_size
 
-        return [c, dw * (index2 + x), dh * (index1 + y), h * dh, w * dw] # index order is critical!!!
+        return [p, *c, dw * (index2 + x), dh * (index1 + y), h * dh, w * dw] # index order is critical!!!
 
     def getIOUinTraining(self, index1, index2, label1, label2):
+        """
+        param: (index1, index2): object location (ny, nx)
+                label1, label2: y_pred and y_true in shape (85,) tensor.
+        return: iou of the above two labels.
+        """
 
         return self.getIOU(self.getBoxinTraining(index1, index2, label1), self.getBoxinTraining(index1, index2, label2))
 

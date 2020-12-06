@@ -1,9 +1,9 @@
-import os, json
+import os
 import numpy as np
 import tensorflow as tf
 from pycocotools.coco import COCO
 from sklearn.preprocessing import OneHotEncoder
-
+from sklearn.utils import shuffle
 
 
 class GetDataIndex:
@@ -42,15 +42,11 @@ class GetDataIndex:
         annFile = '{}/annotations/instances_{}.json'.format(self.label_folder, self.data_type)
 
         coco = COCO(annFile)
-        # cats = coco.loadCats(coco.getCatIds())
         anns = coco.loadAnns(coco.getAnnIds())
         imgs = coco.loadImgs(coco.getImgIds())
 
         labels_ = {str(img['id']): [max(img['height'], img['width'])] for img in imgs}
         imgs = {img['file_name']: str(img['id']) for img in imgs}
-        # categories = [[cat['id']] for cat in cats]
-        # encoder = OneHotEncoder(categories='auto')
-        # encoder.fit(categories)
 
         for ann in anns:
             id = str(ann['image_id'])
@@ -59,17 +55,19 @@ class GetDataIndex:
                 bbox = np.array(ann['bbox']) * resize_ratio
                 xybbox = self._calReletiveLocBox(bbox.tolist())
                 labels_[id].append([ann['category_id']] + xybbox)
-                # labels_[id].append([1.] + encoder.transform([[ann['category_id']]]).toarray()[0].tolist() + ann['bbox'])
 
         data = []
         for img_name, img_id in imgs.items():
 
             data.append((img_name, labels_[img_id][1:]))
 
-        return data
+        return shuffle(data) # set random_seed to fix changes.
 
 
 class GetImage:
+    """
+    image batch preprocess, __call__ returns image batch tensor.
+    """
 
     def __init__(self, all_image_paths, img_size):
 
@@ -108,6 +106,9 @@ class GetImage:
 
 
 class GetLabel:
+    """
+    label batch preprocess, __call__ returns label tensor batch with shape (batch_size, d, d, 85).
+    """
 
     def __init__(self, label, encoder, output_size):
 
@@ -135,12 +136,9 @@ class GetLabel:
 
 
 
-
-
-
 class GetData:
     """
-    get (image, label) pairs for training and test.
+    get (image, label) pairs batch for training and test.
 
     """
     def __init__(self, image_folder, label_folder, data_type, img_size, grid_size, batch_size, encoder):
@@ -174,18 +172,6 @@ class GetData:
     def __call__(self):
 
         return self.data_generator
-
-
-        # data = tf.data.Dataset.from_tensor_slices((images,targets)).batch(self.batch_size)
-            # labels = tf.data.Dataset.from_tensor_slices(labels).batch(self.batch_size)
-        #
-        # else:
-        #     images = tf.convert_to_tensor(images)
-        #     labels = tf.convert_to_tensor(labels)
-        #     data = (images, labels)
-
-        # x_train, x_test, y_train, y_test = \
-        #     train_test_split(images, targets, test_size = test_size, random_state = random_state)
 
 
 
