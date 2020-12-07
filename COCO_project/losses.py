@@ -67,8 +67,8 @@ def yolo_loss_v3(y_true, y_pred, exist_thresh, iou_thresh, grid_size, beta, alph
     mask[...,0] = 1.
     index = tf.where(y_true[...,0]==1)
     iouLossList = [0]
-    # for i,j,k in index.numpy():
-    #     mask[i,j,k] = 1.
+    for i,j,k in index.numpy():
+        mask[i,j,k] = 1.
     #     iouLoss = 1.- Predict(exist_thresh, iou_thresh, grid_size).getIOUinTraining(j, k, y_true[i,j,k], y_pred[i,j,k])
     #     iouLossList.append(iouLoss)
 
