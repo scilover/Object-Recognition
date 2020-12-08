@@ -3,7 +3,7 @@ import time
 from models import Yolo
 from collections import defaultdict
 import tensorflow as tf
-from preprocess import GetData, GetImage
+from preprocess import GetData, GetImage, GetDataIndex
 from sklearn.preprocessing import OneHotEncoder
 from pycocotools.coco import COCO
 
@@ -21,10 +21,13 @@ def augment(image,label):
 
 class Train(object):
 
-    def __init__(self, model, epochs, train_data, test_data, beta, alpha, lr,
+    def __init__(self, train_data, val_data, train_image_folder, val_image_folder, model, epochs, beta, alpha, lr,
                  optimizer, loss, exist_thresh=0.9, iou_thresh=0.6, grid_size=(32, 32)):
         self.train_data = train_data
-        self.test_data = test_data
+        self.val_data = val_data
+        self.train_image_folder = train_image_folder
+        self.val_image_folder = val_image_folder
+        # self.label_folder = label_folder
         self.model = model
         self.loss = loss
         self.optimizer = optimizer
@@ -84,6 +87,9 @@ class Train(object):
     def train(self):
 
         for epoch in range(self.epochs):
+
+            train_data = GetData(self.train_data, self.train_image_folder, img_size, grid_size, batch_size, encoder)()
+            val_data = GetData(self.val_data, self.val_image_folder, img_size, grid_size, batch_size, encoder)()
             # 在下一个epoch开始时，重置评估指标
             self.train_loss.reset_states()
             # # train_accuracy.reset_states()
@@ -93,10 +99,18 @@ class Train(object):
             self.l2.reset_states()
             self.l3.reset_states()
             self.iouLoss.reset_states()
-            for images, labels in self.train_data:
+            for images, labels in train_data:
                 self.train_step(images, labels)
+                # template = 'batch: {}, Train loss: {}, Test Loss: {}, l1: {}, l2: {}, l3: {}, iouLoss: {}'  # , Test Accuracy: {}'
+                # print(template.format(i,
+                #                       self.train_loss.result(),
+                #                       self.test_loss.result(),
+                #                       self.l1.result(),
+                #                       self.l2.result(),
+                #                       self.l3.result(),
+                #                       self.iouLoss.result()))
 
-            for images, labels in self.test_data:
+            for images, labels in val_data:
                 self.test_step(images, labels)
 
             test_loss_val = float(self.test_loss.result().numpy())
@@ -115,8 +129,8 @@ class Train(object):
 
             if l1 < self.best_l1 or l3 < self.best_l3 or test_loss_val < self.best_loss or iouLoss < self.best_iouLoss:
                 self.checkpoint = 0
-                if iouLoss < 0.08:#l1 < 0.001 and l3 < 0.001:
-                    model.save_weights('model_weights\DenseNet121-1024-Grid32-32'
+                # if iouLoss < 0.08:#l1 < 0.001 and l3 < 0.001:
+                model.save_weights('model_weights\DenseNet121-1024-Grid16-16'
                                        '\/beta-{}-alpha-{}-lr-{}-'
                                        'epoch-{}-testloss-{:.5f}-trainloss-{:.5f}-l1-{:.5f}-l2-{:.5f}-l3-{:.5f}-iouLoss-{:.4f}.h5'
                                        .format(self.beta, self.alpha, self.lr, epoch, test_loss_val, train_loss_val, l1, l2, l3, iouLoss))
@@ -164,8 +178,7 @@ if __name__ == '__main__':
     cats = [[cat['id']] for cat in cats]
     encoder.fit(cats)
 
-    train_data = GetData(train_image_folder, label_folder, 'train2017', img_size, grid_size, batch_size, encoder)()
-    val_data = GetData(val_image_folder, label_folder, 'val2017', img_size, grid_size, batch_size, encoder)()
+
     # train_data = (train_data
     #             .shuffle(1000)
     #             .map(augment, num_parallel_calls=AUTOTUNE)
@@ -183,11 +196,14 @@ if __name__ == '__main__':
                 model = Yolo(img_size, grid_size).model()
                 # model.load_weights('model_weights\DenseNet121-1024-Grid32-32\/'
                 #                    'beta-0.0067-alpha-1.0-lr-0.0001-epoch-405-testloss-0.00058-trainloss-0.00034-l1-0.00018-l2-0.00000-l3-0.00039-iouLoss-0.0604.h5')
-                hist = Train(model, 1000, train_data, val_data, beta, alpha, lr,
+                train_data = GetDataIndex(label_folder, 'train2017', img_size, grid_size)()
+                val_data = GetDataIndex(label_folder, 'val2017', img_size, grid_size)()
+                hist = Train(train_data, val_data, train_image_folder, val_image_folder,
+                             model, 10, beta, alpha, lr,
                              tf.keras.optimizers.Adam(lr),
                              losses.yolo_loss_v4)
                 hist.train()
-                with open('history/DenseNet121-1024-Grid32-32/history-beta-{}-alpha-{}-lr-{}.json'.format(beta,alpha,lr),'w') as obj:
+                with open('history/DenseNet121-Grid16/history-beta-{}-alpha-{}-lr-{}.json'.format(beta,alpha,lr),'w') as obj:
                     json.dump(hist.history, obj)
 
     # model.save_weights('G:\Computer Vision\yolo\MyYolo\model_weights\weights.h5')

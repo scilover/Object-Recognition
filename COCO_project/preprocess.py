@@ -61,7 +61,7 @@ class GetDataIndex:
 
             data.append((img_name, labels_[img_id][1:]))
 
-        return shuffle(data) # set random_seed to fix changes.
+        return data # set random_seed to fix changes.
 
 
 class GetImage:
@@ -141,9 +141,9 @@ class GetData:
     get (image, label) pairs batch for training and test.
 
     """
-    def __init__(self, image_folder, label_folder, data_type, img_size, grid_size, batch_size, encoder):
+    def __init__(self, data, image_folder, img_size, grid_size, batch_size, encoder):
 
-        self.data = GetDataIndex(label_folder, data_type, img_size, grid_size)()
+        self.data = data
         self.batch_size = batch_size
         self.image_folder = image_folder
         self.data_generator = iter(self.generator())
@@ -154,7 +154,7 @@ class GetData:
 
 
     def generator(self):
-        sample_number = len(self.data)
+        sample_number = 128#len(self.data)
         for i in range(0, sample_number, self.batch_size):
             if i + self.batch_size <= sample_number:
                 data = self.data[i: i + self.batch_size]
@@ -170,6 +170,9 @@ class GetData:
             yield images, labels
 
     def __call__(self):
+
+        # serialized_features_dataset = tf.data.Dataset.from_generator(
+        #     self.generator, output_types=tf.string, output_shapes=())
 
         return self.data_generator
 
