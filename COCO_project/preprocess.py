@@ -187,7 +187,7 @@ if __name__ == '__main__':
     cats = [[cat['id']] for cat in cats]
     encoder.fit(cats)
 
-    data = GetData(image_folder, label_folder, 'val2017', (640, 640), (32, 32), 8, encoder)()
+    data = GetData(image_folder, label_folder, 'val2017', (320, 320), (16, 16), 8, encoder)()
     k = next(data)
 
 

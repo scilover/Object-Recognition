@@ -83,3 +83,33 @@ def yolo_loss_v3(y_true, y_pred, exist_thresh, iou_thresh, grid_size, beta, alph
     loss = tf.add_n([l1, l2, l3])
 
     return loss, l1, l2, l3, iouLoss
+
+def yolo_loss_v4(y_true, y_pred, exist_thresh, iou_thresh, grid_size, beta, alpha):
+
+    y_true = tf.cast(y_true, y_pred.dtype)
+
+    mask = np.zeros(y_true.shape)
+    mask[...,0] = 1.
+    index = tf.where(y_true[...,0]==1)
+    iouLossList = [0]
+    l2, l3 = [], []
+    for i,j,k in index.numpy():
+        mask[i,j,k] = 1.
+        l2.append(tf.keras.losses.CategoricalCrossentropy()(y_true[i,j,k,1:81], y_pred[i,j,k, 1:81]))
+        l3.append(tf.keras.losses.MeanSquaredError()(y_true[i,j,k, -4:], y_pred[i,j,k, -4:]))
+    l2 = tf.reduce_mean(l2)
+    l3 = tf.reduce_mean(l3)
+    #     iouLoss = 1.- Predict(exist_thresh, iou_thresh, grid_size).getIOUinTraining(j, k, y_true[i,j,k], y_pred[i,j,k])
+    #     iouLossList.append(iouLoss)
+
+    mask = tf.convert_to_tensor(mask, dtype=tf.float32)
+    y_pred = tf.math.multiply(mask, y_pred)
+
+
+    l1 = alpha * NonEquivBinaryCrossEntropy(beta)(y_true[...,0:1], y_pred[...,0:1])
+    # l2 = tf.keras.losses.CategoricalCrossentropy()(y_true[...,1:81], y_pred[..., 1:81])
+    # l3 = tf.keras.losses.MeanSquaredError()(y_true[..., -4:], y_pred[..., -4:])
+    iouLoss = tf.reduce_mean(iouLossList)
+    loss = tf.add_n([l1, l2, l3])
+
+    return loss, l1, l2, l3, iouLoss

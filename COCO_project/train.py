@@ -155,7 +155,7 @@ if __name__ == '__main__':
     val_image_folder = r'G:\Data\coco2017\val2017'
     img_size = (320, 320)
     grid_size = (16, 16)
-    batch_size = 8
+    batch_size = 16
 
     encoder = OneHotEncoder(categories='auto')
     annFile = '{}/annotations/instances_{}.json'.format(label_folder, 'val2017')
@@ -176,7 +176,7 @@ if __name__ == '__main__':
 
     betaRange = [0.01]
     lrRange = [1e-4]
-    alphaRange = [1.0]
+    alphaRange = [100.0]
     for beta in betaRange:
         for lr in lrRange:
             for alpha in alphaRange:
@@ -185,7 +185,7 @@ if __name__ == '__main__':
                 #                    'beta-0.0067-alpha-1.0-lr-0.0001-epoch-405-testloss-0.00058-trainloss-0.00034-l1-0.00018-l2-0.00000-l3-0.00039-iouLoss-0.0604.h5')
                 hist = Train(model, 1000, train_data, val_data, beta, alpha, lr,
                              tf.keras.optimizers.Adam(lr),
-                             losses.yolo_loss_v3)
+                             losses.yolo_loss_v4)
                 hist.train()
                 with open('history/DenseNet121-1024-Grid32-32/history-beta-{}-alpha-{}-lr-{}.json'.format(beta,alpha,lr),'w') as obj:
                     json.dump(hist.history, obj)
